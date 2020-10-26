@@ -1,12 +1,17 @@
 {
   "name": "a-signal",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Simple signal emitter.",
   "main": "index.js",
   "scripts": {
     "test": "node test.js"
   },
-  "keywords": ["signal", "events", "signals", "events"],
+  "keywords": [
+    "signal",
+    "events",
+    "signals",
+    "events"
+  ],
   "author": "Volodymyr Ishchenko",
   "license": "MIT"
 }
