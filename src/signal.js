@@ -5,6 +5,7 @@ class Signal {
     this.fns = []
     this.prioritizable = true
     this.memorable = false
+    this.stopped = false
     this.args = []
   }
 
@@ -36,6 +37,8 @@ class Signal {
   }
 
   emit() {
+    this.stopped = false
+
     let i = this.fns.length
     while (i--) {
       const bind = this.fns[i]
@@ -43,11 +46,19 @@ class Signal {
       bind.fn(...arguments)
       bind.fired++
       if (bind.once) this.fns.splice(i, 1)
+      if (this.stopped) {
+        this.stopped = false
+        return
+      }
     }
   }
 
   wipe() {
     this.fns.length = 0
+  }
+
+  break() {
+    this.stopped = true
   }
 }
 
