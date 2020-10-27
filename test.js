@@ -38,3 +38,14 @@ sig.on(() => {
 sig.on(() => { console.log('will never happen') })
 
 sig.emit()
+
+sig.wipe()
+
+sig.on(() => {
+  console.log('boomer`s way to stop!')
+  return false
+}, 100)
+
+sig.on(() => { console.log('will never happen') })
+
+sig.emit()

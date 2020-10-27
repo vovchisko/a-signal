@@ -10,11 +10,6 @@ class Bind {
   off () {
     this.signal.off(this)
   }
-
-  destruct() {
-    delete this.fn
-    delete this.signal
-  }
 }
 
 module.exports = Bind
