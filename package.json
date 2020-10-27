@@ -1,6 +1,6 @@
 {
   "name": "a-signal",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Simple signal emitter.",
   "main": "index.js",
   "scripts": {
