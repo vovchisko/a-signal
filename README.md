@@ -2,6 +2,11 @@
 Tiny declarative alternative for event-emitter.
 Basically it is event emitter for a single event.
 
+### Setup
+```
+npm i a-signal -s
+```
+
 ### Basic Examples
 
 ```JavaScript
