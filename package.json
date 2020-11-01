@@ -13,5 +13,13 @@
     "events"
   ],
   "author": "Volodymyr Ishchenko",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vovchisko/a-signal.git"
+  },
+  "homepage": "https://github.com/vovchisko/a-signal#readme",
+  "bugs": {
+    "url": "https://github.com/vovchisko/a-signal/issues"
+  }
 }
