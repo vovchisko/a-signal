@@ -55,7 +55,6 @@ class Signal {
       const bind = this.binds[i]
       if (this.memorable) this.args = arguments
       if (bind.fn(...arguments) === false) this.stopped = true
-      this.emited++
       bind.fired++
       if (bind.once) this.binds.splice(i, 1)
       if (this.stopped) {
@@ -63,6 +62,7 @@ class Signal {
         return
       }
     }
+    this.emited++
   }
 
   wipe () {
