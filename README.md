@@ -42,7 +42,7 @@ sig.off(bind)
 ### Listeners priority
 Prioritize listeners.
 ```JavaScript
-sig.prioritizable = true
+sig.prioritized = true
 
 sig.on(()=>{ console.log('regular pew')})
 sig.on(()=>{ console.log('prioritized pew')}, 100)
@@ -72,7 +72,7 @@ sig.emit()
 ```
 
 Another ancient way to stop by returning false inside a listener function.
-```
+```JavaScript
 sig.on(() => {
   console.log('boomer`s way to stop!')
   return false
@@ -82,6 +82,35 @@ sig.on(() => { console.log('will never happen') })
 
 sig.emit()
 ```
+
+
+### Late listeners
+Let's say you need to call listener when some job has been done. But, it's already done and will never trigger the signal, right? No worries! We can ask signal to fire instantly if it was emitted before late listener.
+
+```JavaSCript
+const late = new Signal({ late: true })
+memlate.on(() => { console.log('subscribed before') })
+
+// job is done here and it will never emit again
+late.emit()
+
+// immediate fire even if it was called before
+late.on(() => { console.log('late fire with no args') })
+```
+
+If you need to get th same arguments - add `memorable` flag.
+
+```JavaSCript
+const memlate = new Signal({ late: true, memorable: true })
+
+memlate.on(() => { console.log('subscribed before') })
+memlate.emit('first')
+
+// immediate fire even if it was called before, even with the same arguments
+memlate.on((args) => { console.log('late fire with previous args:', args) })
+````
+
+> _**NOTE**: Arguments from last emit stays stored inside the signal - **use it with caution**!_
 
 ### Remove all listeners
 
