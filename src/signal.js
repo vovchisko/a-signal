@@ -51,9 +51,11 @@ class Signal {
     this.stopped = false
 
     let i = this.binds.length
+
+    if (this.memorable) this.args = arguments
+
     while (i--) {
       const bind = this.binds[i]
-      if (this.memorable) this.args = arguments
       if (bind.fn(...arguments) === false) this.stopped = true
       bind.fired++
       if (bind.once) this.binds.splice(i, 1)
@@ -62,6 +64,7 @@ class Signal {
         return
       }
     }
+
     this.emited++
   }
 
