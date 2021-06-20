@@ -1,12 +1,4 @@
-//
-// Class extended from ExtensibleFunction allow to use class instance
-// as a function, passed in the constructor.
-//
-// See source: https://stackoverflow.com/a/40333097/533976
-// by Aaron Levine
-//
-
-const EFN_KEY = Symbol('ExtensibleFunctionKey')
+const EFN_KEY = Symbol('EXTENSIBLE_FUNCTION_KEY')
 
 export default class ExtensibleFunction extends Function {
   constructor (fn) {
