@@ -1,7 +1,10 @@
-const Bind = require('./bind')
+import ExtensibleFunction from './callable.js'
+import Bind from './bind.js'
 
-class Signal {
+export default class Signal extends ExtensibleFunction {
   constructor ({ memorable = false, prioritized = false, late = false } = {}) {
+    super((fn, priority) => this.on(fn, priority))
+
     this.binds = []
     this.prioritized = prioritized || false
     this.memorable = memorable || false
@@ -77,4 +80,3 @@ class Signal {
   }
 }
 
-module.exports = Signal

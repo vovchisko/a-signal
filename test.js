@@ -1,4 +1,11 @@
-const Signal = require('.')
+import { auto_runner } from '../test-a-bit/index.js'
+
+auto_runner('./test')
+
+
+// todo: finish the rest of tests
+/*
+import Signal from './index.js'
 
 const sig = new Signal()
 
@@ -66,3 +73,4 @@ memlate.on(() => { console.log('will happen once') })
 memlate.emit('first')
 // immediate fire even if it was called before with the same args
 memlate.on((args) => { console.log('late fire with previous args:', args) })
+*/

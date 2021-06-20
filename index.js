@@ -1,1 +1,2 @@
-module.exports = require('./src/signal')
+import Signal from './src/signal.js'
+export default Signal

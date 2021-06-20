@@ -1,10 +1,11 @@
 {
   "name": "a-signal",
   "version": "2.0.2",
+  "type": "module",
   "description": "Simple signal emitter.",
   "main": "index.js",
   "scripts": {
-    "test": "node test.js"
+    "test": "node test/_run.js"
   },
   "keywords": [
     "signal",
@@ -21,5 +22,8 @@
   "homepage": "https://github.com/vovchisko/a-signal#readme",
   "bugs": {
     "url": "https://github.com/vovchisko/a-signal/issues"
+  },
+  "devDependencies": {
+    "test-a-bit": "^1.0.0"
   }
 }

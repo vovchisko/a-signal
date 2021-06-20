@@ -1,4 +1,4 @@
-class Bind {
+export default class Bind {
   constructor (fn, signal, once = false, priority) {
     this.fn = fn
     this.signal = signal
@@ -11,5 +11,3 @@ class Bind {
     this.signal.off(this)
   }
 }
-
-module.exports = Bind
