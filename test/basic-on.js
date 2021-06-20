@@ -11,6 +11,7 @@ execute('sig.on() and sig()', async (success, fail) => {
     if (count === 2) success('both works')
   }
 
+  // both works the same way and will return Bind object
   sig.on(count_signals)
   sig(count_signals)
 
