@@ -5,7 +5,7 @@
   "description": "Simple signal emitter.",
   "main": "index.js",
   "scripts": {
-    "test": "node test/_run.js"
+    "test": "node tests/_run.js"
   },
   "keywords": [
     "signal",
