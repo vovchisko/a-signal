@@ -107,10 +107,20 @@ export default class Signal {
   }
 
   /**
-   * Unsubscribe all
+   * Forget previous calls and memory
    */
-  wipe () {
+  forget () {
+    this.args.length = 0
+    this.emited = 0
+  }
+
+  /**
+   * Unsubscribe all
+   * @param {boolean} with_flush
+   */
+  wipe (with_flush = false) {
     this.binds.length = 0
+    if (with_flush) this.forget()
   }
 
   /**
