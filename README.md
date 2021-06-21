@@ -1,8 +1,9 @@
 # a-signal
-Tiny declarative alternative for event-emitter.
-Basically it is event emitter for a single event.
+
+Tiny declarative alternative for event-emitter. Basically it is event emitter for a single event.
 
 ### Setup
+
 ```
 npm i a-signal -s
 ```
@@ -22,6 +23,24 @@ sig.on((a, b) => {
 sig.emit('any', 'arguments')
 ```
 
+### Extra-sugar
+
+In case you're lazy to type `.on()` all the time, or just don't want to expose signal itself - you can extract subscriber
+method like this:
+
+```JavaScript
+const sig = new Signal()
+
+const obj = {
+  sugared: sig.subscriber()
+}
+
+obj.sugared(() => console.log('sugar!'))
+
+sig.emit()
+```
+> this trick might be improved in observeble future.
+
 ### Unsubscribe
 
 ```JavaScript
@@ -35,17 +54,20 @@ sig.emit() // nothing
 ```
 
 The same effect can be achieved with:
+
 ```JavaScript
 sig.off(bind)
 ```
 
 ### Listeners priority
+
 Prioritize listeners.
+
 ```JavaScript
 sig.prioritized = true
 
-sig.on(()=>{ console.log('regular pew')})
-sig.on(()=>{ console.log('prioritized pew')}, 100)
+sig.on(() => { console.log('regular pew')})
+sig.on(() => { console.log('prioritized pew')}, 100)
 
 sig.emit()
 // output:
@@ -54,7 +76,9 @@ sig.emit()
 ```
 
 ### Break
+
 Allows to stop signal propagation for current emit call.
+
 ```JavaScript
 sig.on(() => {
   console.log('okay, stop!')
@@ -72,6 +96,7 @@ sig.emit()
 ```
 
 Another ancient way to stop by returning false inside a listener function.
+
 ```JavaScript
 sig.on(() => {
   console.log('boomer`s way to stop!')
@@ -83,9 +108,10 @@ sig.on(() => { console.log('will never happen') })
 sig.emit()
 ```
 
-
 ### Late listeners
-Let's say you need to call listener when some job has been done. But, it's already done and will never trigger the signal, right? No worries! We can ask signal to fire instantly if it was emitted before late listener.
+
+Let's say you need to call listener when some job has been done. But, it's already done and will never trigger the signal,
+right? No worries! We can ask signal to fire instantly if it was emitted before late listener.
 
 ```JavaSCript
 const late = new Signal({ late: true })
@@ -110,7 +136,7 @@ memlate.emit('first')
 memlate.on((args) => { console.log('late fire with previous args:', args) })
 ````
 
-> _**NOTE**: Arguments from last emit stays stored inside the signal - **use it with caution**!_
+> _**NOTE**: Arguments from last emit remains inside the signal - **use it with caution**!_
 
 ### Remove all listeners
 
@@ -119,5 +145,6 @@ sig.wipe()
 ```
 
 #### todo:
+
 - Optimize emit call to different arguments length.
 - More examples

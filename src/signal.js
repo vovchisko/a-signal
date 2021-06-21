@@ -1,10 +1,13 @@
-import ExtensibleFunction from './callable.js'
 import Bind from './bind.js'
 
-export default class Signal extends ExtensibleFunction {
+export default class Signal {
+  /**
+   * Create Signal emitter
+   * @param {boolean} memorable remember arguments of the last call
+   * @param {boolean} prioritized always sort subscribers by priority
+   * @param {boolean} late emit signal immediately after subscribe if it was emitted before
+   */
   constructor ({ memorable = false, prioritized = false, late = false } = {}) {
-    super((fn, priority) => this.on(fn, priority))
-
     this.binds = []
     this.prioritized = prioritized || false
     this.memorable = memorable || false
@@ -14,10 +17,28 @@ export default class Signal extends ExtensibleFunction {
     this.emited = 0
   }
 
+  /**
+   * Extra-sugar
+   * Extract `on` into separated function. Called w/o arguments will return a signal object.
+   * @return {function(function=, number=): Bind}
+   */
+  subscriber () {
+    return (fn, priority = 0) => this.on(fn, priority)
+  }
+
+  /**
+   * Sort Binds by priority. Automatically called when `prioritized: true`
+   */
   sort () {
     this.binds.sort((a, b) => a.priority - b.priority)
   }
 
+  /**
+   * Subscribe on the signal.
+   * @param {function(*)} fn callback for the signal
+   * @param {number} priority priority in the listeners list, triggers `Signal.sort` when `prioritized: true`
+   * @return {Bind}
+   */
   on (fn, priority = 0) {
     const bind = new Bind(fn, this, false, priority)
     this.binds.push(bind)
@@ -30,6 +51,12 @@ export default class Signal extends ExtensibleFunction {
     return bind
   }
 
+  /**
+   * Subscribe on the signal to catch signal once.
+   * @param {function(function=, number=)} fn callback for the signal
+   * @param {number} priority priority in the listeners list, triggers `Signal.sort` when `prioritized: true`
+   * @return {Bind}
+   */
   once (fn, priority = 0) {
     const bind = new Bind(fn, this, true, priority)
     this.binds.push(bind)
@@ -42,6 +69,10 @@ export default class Signal extends ExtensibleFunction {
     return bind
   }
 
+  /**
+   * Unsubscribe from event by Bind
+   * @param {Bind} bind
+   */
   off (bind) {
     const index = this.binds.indexOf(bind)
 
@@ -50,6 +81,10 @@ export default class Signal extends ExtensibleFunction {
     }
   }
 
+  /**
+   * Emit signal with any arguments
+   * @param {*} arguments
+   */
   emit () {
     this.stopped = false
 
@@ -71,12 +106,20 @@ export default class Signal extends ExtensibleFunction {
     this.emited++
   }
 
+  /**
+   * Unsubscribe all
+   */
   wipe () {
     this.binds.length = 0
   }
 
+  /**
+   * Cause signal to stop emitting on the current cycle.
+   * Will turn to false again on next emit() call.
+   */
   break () {
     this.stopped = true
   }
 }
+
 

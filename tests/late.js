@@ -6,5 +6,7 @@ execute('late event', async (success, fail) => {
 
   sig.emit()
 
-  sig(() => success('signal fired!'))
+  sig.on(() => success('signal fired'))
+
+  fail('no signal')
 })
