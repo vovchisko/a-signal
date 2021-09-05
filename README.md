@@ -95,19 +95,6 @@ sig.emit()
 //    okay, stop!
 ```
 
-Another ancient way to stop by returning false inside a listener function.
-
-```JavaScript
-sig.on(() => {
-  console.log('boomer`s way to stop!')
-  return false
-}, 100)
-
-sig.on(() => { console.log('will never happen') })
-
-sig.emit()
-```
-
 ### Late listeners
 
 Let's say you need to call listener when some job has been done. But, it's already done and will never trigger the signal,

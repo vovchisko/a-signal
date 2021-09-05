@@ -94,7 +94,7 @@ export default class Signal {
 
     while (i--) {
       const bind = this.binds[i]
-      if (bind.fn(...arguments) === false) this.stopped = true
+      bind.fn(...arguments)
       bind.fired++
       if (bind.once) this.binds.splice(i, 1)
       if (this.stopped) {

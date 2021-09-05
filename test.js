@@ -12,7 +12,6 @@ runner([
   { script: './tests/forget.js' },
   { script: './tests/wipe.js' },
   { script: './tests/break.js' },
-  { script: './tests/break-alt.js' },
   { script: './tests/bind-off.js' },
   { script: './tests/prioritized.js' },
 ]).then(() => console.log('bye!'))
