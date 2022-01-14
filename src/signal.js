@@ -35,7 +35,7 @@ export default class Signal {
 
   /**
    * Subscribe on the signal.
-   * @param {function(*)} fn callback for the signal
+   * @param {function} fn callback for the signal
    * @param {number} priority priority in the listeners list, triggers `Signal.sort` when `prioritized: true`
    * @return {Bind}
    */
