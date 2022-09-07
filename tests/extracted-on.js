@@ -4,7 +4,7 @@ import Signal      from '../src/signal.js'
 execute('extracted .on()', async (success, fail) => {
   const sig = new Signal()
 
-  const sugared = sig.subscriber()
+  const sugared = sig.extractOn()
 
   sugared(() => success('signal fired'))
 

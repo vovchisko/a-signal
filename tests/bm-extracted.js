@@ -13,7 +13,7 @@ execute('bench extracted .on()', async (success, fail) => {
 
   for (let i = 0; i < BENCH_SIGNALS; i++) {
     _s = new Signal()
-    const _sub = _s.subscriber()
+    const _sub = _s.extractOn()
     for (let j = 0; j < BENCH_LISTENERS_PER_SIG; j++) {
       listeners.push(_sub(() => hits++))
     }

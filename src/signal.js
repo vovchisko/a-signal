@@ -18,12 +18,52 @@ export default class Signal {
   }
 
   /**
-   * Extra-sugar
-   * Extract `on` into separated function. Called w/o arguments will return a signal object.
+   * Extract `on` into separated function.
    * @return {function(function=, number=): Bind}
+   * @deprecated
    */
   subscriber () {
     return (fn, priority = 0) => this.on(fn, priority)
+  }
+
+  /**
+   * Extract `on` into separated function.
+   * @return {function(function=, number=): Bind}
+   */
+  extractOn () {
+    return (fn, priority = 0) => this.on(fn, priority)
+  }
+
+  /**
+   * Extract `once` into separated function.
+   * @return {function(function=, number=): Bind}
+   */
+  extractOnce () {
+    return (fn, priority = 0) => this.once(fn, priority)
+  }
+
+  /**
+   * Extract `emit` into a separate function
+   * @returns {function(...[*]): void}
+   */
+  extractEmit () {
+    return (...args) => this.emit(...args)
+  }
+
+
+  wait (tio = 0) {
+    return new Promise((resolve, reject) => {
+
+      const _t = tio ? setTimeout(() => {
+        sub.off()
+        reject()
+      }, tio) : null
+
+      const sub = this.once((a) => {
+        if (_t) clearInterval(_t)
+        resolve(a)
+      })
+    })
   }
 
   /**
@@ -83,7 +123,7 @@ export default class Signal {
 
   /**
    * Emit signal with any arguments
-   * @param {*} arguments
+   * @param {...[*]} arguments
    */
   emit () {
     this.stopped = false
