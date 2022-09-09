@@ -19,4 +19,6 @@ runner([
   { script: './tests/extracted-all.js' },
   { script: './tests/wait.js', timeout: 3000 },
   { script: './tests/wait-timeout.js', timeout: 3000 },
+  { script: './tests/wait-def.js', timeout: 3000 },
+  { script: './tests/wait-def-timeout.js', timeout: 3000 },
 ]).then(() => console.log('bye!'))

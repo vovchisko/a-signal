@@ -6,13 +6,15 @@ export default class Signal {
    * @param {boolean} memorable remember arguments of the last call
    * @param {boolean} prioritized always sort subscribers by priority
    * @param {boolean} late emit signal immediately after subscribe if it was emitted before
+   * @param {number} [timeout=0] default timeout for async .wait() sugar
    */
-  constructor ({ memorable = false, prioritized = false, late = false } = {}) {
+  constructor ({ memorable = false, prioritized = false, late = false, timeout = 0 } = {}) {
     this.binds = []
     this.prioritized = prioritized || false
     this.memorable = memorable || false
     this.late = late || false
     this.stopped = false
+    this.timeout = timeout
     this.args = []
     this.emited = 0
   }
@@ -50,10 +52,15 @@ export default class Signal {
     return (...args) => this.emit(...args)
   }
 
-
-  wait (tio = 0) {
+  /**
+   * Will resolve once when signal emits.
+   *
+   * @param timeout
+   * @returns {Promise<unknown>}
+   */
+  wait (timeout = -1) {
+    const tio = timeout === -1 ? this.timeout : timeout
     return new Promise((resolve, reject) => {
-
       const _t = tio ? setTimeout(() => {
         sub.off()
         reject()
