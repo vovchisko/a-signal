@@ -1,137 +1,160 @@
 # a-signal
 
-Tiny declarative alternative for event-emitter. Basically it is event emitter for a single event.
+A lightweight, feature-rich signal/event emitter for single events. Perfect for handling state changes, async operations, and event-driven architectures.
 
-### Setup
+## Installation
 
+```bash
+npm install a-signal
 ```
-npm i a-signal -s
+
+## Features
+
+Unlike typical event emitters that handle multiple named events, a-signal provides specialized features:
+
+- **Single Event Focus**: Each signal instance is a dedicated event channel
+- **Priority-based Listeners**: Control execution order with numeric priorities (higher executes first)
+- **Late Listener Support**: Catch events that happened before subscription
+- **Memory Mode**: Remember exact arguments for late subscribers
+- **Promise-based Waiting**: Await next signal emission with optional timeout
+- **Emission Control**: Stop event propagation at any point
+- **Memory Management**: Clear memory and listeners independently
+- **Extractable Methods**: Create clean APIs by extracting methods
+- **One-time Listeners**: Auto-unsubscribe after first execution
+
+## Examples
+
+### Basic Usage
+Simple subscription and emission - the foundation of signal usage.
+```javascript
+const signal = new Signal()
+signal.on(data => console.log(data))
+signal.emit('Hello!')
 ```
 
-### Basic Examples
+### Priority and Control Flow
+Control the order of execution and stop propagation when needed. Useful for middleware-like patterns.
+```javascript
+const signal = new Signal({ prioritized: true })
 
-```JavaScript
-const Signal = require('a-signal')
+// Higher priority executes first
+signal.on(() => console.log('Second'), 1)
+signal.on(() => console.log('First'), 100)
 
-const sig = new Signal()
+// Stop propagation
+signal.on(() => {
+    console.log('Stop here')
+    signal.break()
+})
+```
 
-sig.on((a, b) => {
-  console.log('fire!', a, b)
+### State Management
+Perfect for handling initialization states and late-joining components. Combines late listeners with memory to ensure consistent state.
+```javascript
+const signal = new Signal({ 
+    late: true,      // Get events that happened before subscribing
+    memorable: true  // Remember the arguments too
 })
 
-// console: fire! any arguments
-sig.emit('any', 'arguments')
+signal.emit('state', { value: 42 })
+
+// Later subscriber still gets the event
+signal.on((type, data) => {
+    console.log(type, data.value) // 'state', 42
+})
 ```
 
-### Extra-sugar
+### Async Operations
+Convert event-based code into Promise-based code. Great for handling timeouts and async flows.
+```javascript
+const signal = new Signal({ timeout: 5000 })
 
-In case you're lazy to type `.on()` all the time, or just don't want to expose signal itself - you can extract subscriber
-method like this:
+// Wait for next emission
+try {
+    const value = await signal.wait()
+    console.log('Got:', value)
+} catch {
+    console.log('Timeout')
+}
+```
 
-```JavaScript
-const sig = new Signal()
+### Clean APIs
 
-const obj = {
-  sugared: sig.subscriber()
+Simple extraction:
+Create minimal, focused APIs by extracting just the methods you need.
+```javascript
+const signal = new Signal()
+
+// Extract methods to create a clean interface
+const { emit, on } = {
+    emit: signal.extractEmit(),
+    on: signal.extractOn()
 }
 
-obj.sugared(() => console.log('sugar!'))
-
-sig.emit()
-```
-> this trick might be improved in observeble future.
-
-### Unsubscribe
-
-```JavaScript
-// return Bind object
-const bind = sig.on(() => console.log('pew'))
-
-sig.emit() // console.log('pew')
-bind.off() // unsubscribe
-sig.emit() // nothing
-
+// Clean usage
+on(data => console.log(data))
+emit('Hello!')
 ```
 
-The same effect can be achieved with:
+With full type documentation:
+For larger applications, create well-documented, type-safe APIs with extracted methods.
+```javascript
+class UserAPI {
+    /** @type {Signal<[string, {id: number, name: string}]>} */
+    #signal = new Signal()
 
-```JavaScript
-sig.off(bind)
+    constructor() {
+        /**
+         * Emit user events
+         * @param {string} event - Event type ('login'|'logout'|'update')
+         * @param {{id: number, name: string}} user - User data
+         * @returns {void}
+         */
+        this.emit = this.#signal.extractEmit()
+
+        /**
+         * Subscribe to user events
+         * @param {(event: string, user: {id: number, name: string}) => void} handler
+         * @returns {{ off: () => void }} Subscription handle
+         */
+        this.on = this.#signal.extractOn()
+    }
+}
+
+// Usage remains type-safe
+const api = new UserAPI()
+api.on((event, user) => console.log(`${event}: ${user.name}`))
+api.emit('login', { id: 1, name: 'John' })
 ```
 
-### Listeners priority
+### Memory Management
+Control signal's memory and subscription lifecycle. Useful for cleanup and managing long-living signals.
+```javascript
+// Clear memory but keep listeners
+signal.forget()
 
-Prioritize listeners.
+// Remove listeners but keep memory
+signal.wipe()
 
-```JavaScript
-sig.prioritized = true
-
-sig.on(() => { console.log('regular pew')})
-sig.on(() => { console.log('prioritized pew')}, 100)
-
-sig.emit()
-// output:
-//   prioritized pew
-//   regular pew
+// Clear everything
+signal.wipe(true)
 ```
 
-### Break
+## TypeScript Support
 
-Allows to stop signal propagation for current emit call.
+```typescript
+const signal = new Signal<string>()
+signal.on((data: string) => console.log(data))
 
-```JavaScript
-sig.on(() => {
-  console.log('okay, stop!')
-  sig.break()
-}, 100)
-
-sig.on(() => {
-  console.log('will never happen')
-})
-
-sig.emit()
-
-// output
-//    okay, stop!
+// Multiple arguments
+const multiSignal = new Signal<[number, string]>()
+multiSignal.on((num, str) => console.log(num, str))
 ```
 
-### Late listeners
+## License
 
-Let's say you need to call listener when some job has been done. But, it's already done and will never trigger the signal,
-right? No worries! We can ask signal to fire instantly if it was emitted before late listener.
+[MIT License](LICENSE) - Volodymyr Ishchenko - feel free to use this project commercially.
 
-```JavaSCript
-const late = new Signal({ late: true })
-memlate.on(() => { console.log('subscribed before') })
+---
 
-// job is done here and it will never emit again
-late.emit()
-
-// immediate fire even if it was called before
-late.on(() => { console.log('late fire with no args') })
-```
-
-If you need to get th same arguments - add `memorable` flag.
-
-```JavaSCript
-const memlate = new Signal({ late: true, memorable: true })
-
-memlate.on(() => { console.log('subscribed before') })
-memlate.emit('first')
-
-// immediate fire even if it was called before, even with the same arguments
-memlate.on((args) => { console.log('late fire with previous args:', args) })
-````
-
-> _**NOTE**: Arguments from last emit remains inside the signal - **use it with caution**!_
-
-### Remove all listeners
-
-```JavaScript
-sig.wipe()
-```
-
-#### todo:
-
-- Optimize emit call to different arguments length.
-- More examples
+With love ❤️ from Ukraine 🇺🇦
