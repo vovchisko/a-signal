@@ -24,6 +24,6 @@
     "url": "https://github.com/vovchisko/a-signal/issues"
   },
   "devDependencies": {
-    "test-a-bit": "^1.1.2"
+    "test-a-bit": "^1.1.3"
   }
 }
