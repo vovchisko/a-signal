@@ -1,159 +1,84 @@
 # a-signal
 
-A lightweight, feature-rich signal/event emitter for single events. Perfect for handling state changes, async operations, and event-driven architectures.
+[![npm version](https://badge.fury.io/js/a-signal.svg)](https://badge.fury.io/js/a-signal)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Made in Ukraine](https://img.shields.io/badge/Made%20in%20Ukraine-❤️-0057B7?style=flat&labelColor=005BBB&color=FFD700)](https://x.com/sternenkofund)
 
-## Installation
+A lightweight signal/event emitter for single events. Perfect for state changes, async operations, and event-driven architectures.
+
+## Quick Start
 
 ```bash
 npm install a-signal
 ```
 
-## Features
-
-Unlike typical event emitters that handle multiple named events, a-signal provides specialized features:
-
-- **Single Event Focus**: Each signal instance is a dedicated event channel
-- **Priority-based Listeners**: Control execution order with numeric priorities (higher executes first)
-- **Late Listener Support**: Catch events that happened before subscription
-- **Memory Mode**: Remember exact arguments for late subscribers
-- **Promise-based Waiting**: Await next signal emission with optional timeout
-- **Emission Control**: Stop event propagation at any point
-- **Memory Management**: Clear memory and listeners independently
-- **Extractable Methods**: Create clean APIs by extracting methods
-- **One-time Listeners**: Auto-unsubscribe after first execution
-
-## Examples
-
-### Basic Usage
-Simple subscription and emission - the foundation of signal usage.
 ```javascript
+import Signal from 'a-signal'
+
 const signal = new Signal()
-signal.on(data => console.log(data))
-signal.emit('Hello!')
+signal.on(data => console.log('Received:', data))
+signal.emit('Hello World!')  // logs: Received: Hello World!
 ```
 
-### Priority and Control Flow
-Control the order of execution and stop propagation when needed. Useful for middleware-like patterns.
+## Why a-signal?
+
+Unlike traditional event emitters with string-based event names, each signal represents **one specific event type**. This eliminates typos, improves performance, and makes your code more predictable.
+
 ```javascript
-const signal = new Signal({ prioritized: true })
+// Traditional EventEmitter
+emitter.on('user-login', handler)  // Prone to typos
+emitter.emit('user-login', userData)
 
-// Higher priority executes first
-signal.on(() => console.log('Second'), 1)
-signal.on(() => console.log('First'), 100)
-
-// Stop propagation
-signal.on(() => {
-    console.log('Stop here')
-    signal.break()
-})
+// With a-signal
+const loginSignal = new Signal()    // Type-safe, focused
+loginSignal.on(handler)
+loginSignal.emit(userData)
 ```
 
-### State Management
-Perfect for handling initialization states and late-joining components. Combines late listeners with memory to ensure consistent state.
+## Key Features
+
+✨ **State Management** - Late subscribers get missed events
 ```javascript
-const signal = new Signal({ 
-    late: true,      // Get events that happened before subscribing
-    memorable: true  // Remember the arguments too
-})
-
-signal.emit('state', { value: 42 })
-
-// Later subscriber still gets the event
-signal.on((type, data) => {
-    console.log(type, data.value) // 'state', 42
-})
+const userSignal = new Signal({ memorable: true })
+userSignal.emit(currentUser)  // Set initial state
+userSignal.on(user => updateUI(user))  // Gets current user immediately
 ```
 
-### Async Operations
-Convert event-based code into Promise-based code. Great for handling timeouts and async flows.
+⚡ **Promisified events** - Convert events to async/await
 ```javascript
 const signal = new Signal({ timeout: 5000 })
-
-// Wait for next emission
-try {
-    const value = await signal.wait()
-    console.log('Got:', value)
-} catch {
-    console.log('Timeout')
-}
+const result = await signal.wait()  // Wait for next emission
 ```
 
-### Clean APIs
-
-Simple extraction:
-Create minimal, focused APIs by extracting just the methods you need.
+🔗 **Clean APIs** - Extract methods for composition
 ```javascript
-const signal = new Signal()
-
-// Extract methods to create a clean interface
-const { emit, on } = {
-    emit: signal.extractEmit(),
-    on: signal.extractOn()
+class MagicBox {
+    ready = new Signal({ memorable: true }).extractOn()
 }
-
-// Clean usage
-on(data => console.log(data))
-emit('Hello!')
+await new Promise(resolve => box.ready(resolve))
 ```
 
-With full type documentation:
-For larger applications, create well-documented, type-safe APIs with extracted methods.
+🎯 **Priority Control** - Order execution and stop propagation
 ```javascript
-class UserAPI {
-    /** @type {Signal<[string, {id: number, name: string}]>} */
-    #signal = new Signal()
-
-    constructor() {
-        /**
-         * Emit user events
-         * @param {string} event - Event type ('login'|'logout'|'update')
-         * @param {{id: number, name: string}} user - User data
-         * @returns {void}
-         */
-        this.emit = this.#signal.extractEmit()
-
-        /**
-         * Subscribe to user events
-         * @param {(event: string, user: {id: number, name: string}) => void} handler
-         * @returns {{ off: () => void }} Subscription handle
-         */
-        this.on = this.#signal.extractOn()
-    }
-}
-
-// Usage remains type-safe
-const api = new UserAPI()
-api.on((event, user) => console.log(`${event}: ${user.name}`))
-api.emit('login', { id: 1, name: 'John' })
+const signal = new Signal({ prioritized: true })
+signal.on(() => signal.break(), 100)  // High priority can stop others
 ```
 
-### Memory Management
-Control signal's memory and subscription lifecycle. Useful for cleanup and managing long-living signals.
-```javascript
-// Clear memory but keep listeners
-signal.forget()
+## Documentation
 
-// Remove listeners but keep memory
-signal.wipe()
+See [documentation](./docs/a-signal.md) for comprehensive documentation:
 
-// Clear everything
-signal.wipe(true)
-```
-
-## TypeScript Support
-
-```typescript
-const signal = new Signal<string>()
-signal.on((data: string) => console.log(data))
-
-// Multiple arguments
-const multiSignal = new Signal<[number, string]>()
-multiSignal.on((num, str) => console.log(num, str))
-```
+- **[Getting Started](./docs/a-signal.md)** - Main documentation, API reference and examples
+- **[Basic Usage](./docs/a-signal.basic.md)** - Import, create, subscribe, unsubscribe
+- **[Late](./docs/a-signal.late.md)** - Handle events before subscription
+- **[Memorable](./docs/a-signal.memorable.md)** - Remember emission arguments
+- **[Promises](./docs/a-signal.promises.md)** - Await signal emissions
+- **[Extracts](./docs/a-signal.extracts.md)** - Create clean APIs with method extraction
+- **[Ordered](./docs/a-signal.ordered.md)** - Priority execution and emission control
 
 ## License
 
-[MIT License](LICENSE) - Volodymyr Ishchenko - feel free to use this project commercially.
+[MIT License](LICENSE) - Do whatever you like.
 
 ---
 

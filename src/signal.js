@@ -2,11 +2,12 @@ import Bind from './bind.js'
 
 export default class Signal {
   /**
-   * Create Signal emitter
-   * @param {boolean} memorable remember arguments of the last call
-   * @param {boolean} prioritized always sort subscribers by priority
-   * @param {boolean} late emit signal immediately after subscribe if it was emitted before
-   * @param {number} [timeout=0] default timeout for async .wait() sugar
+   * Create a Signal emitter for single events
+   * @param {Object} [options] - Configuration options
+   * @param {boolean} [options.memorable=false] - Remember arguments from last emission. Auto-enables late
+   * @param {boolean} [options.prioritized=false] - Sort listeners by priority (higher executes first)
+   * @param {boolean} [options.late=false] - Execute listeners on past emissions
+   * @param {number} [options.timeout=0] - Default timeout for wait() in milliseconds
    */
   constructor ({ memorable = false, prioritized = false, late = false, timeout = 0 } = {}) {
     this.binds = []
@@ -20,43 +21,42 @@ export default class Signal {
   }
 
   /**
-   * Extract `on` into separated function.
-   * @return {function(function=, number=): Bind}
-   * @deprecated
+   * Extract `on` method as standalone function
+   * @return {function(Function, number=): Bind} - Extracted on method
+   * @deprecated Use extractOn() instead
    */
   subscriber () {
     return (fn, priority = 0) => this.on(fn, priority)
   }
 
   /**
-   * Extract `on` into separated function.
-   * @return {function(function=, number=): Bind}
+   * Extract `on` method as standalone function
+   * @return {function(Function, number=): Bind} - Extracted on method
    */
   extractOn () {
     return (fn, priority = 0) => this.on(fn, priority)
   }
 
   /**
-   * Extract `once` into separated function.
-   * @return {function(function=, number=): Bind}
+   * Extract `once` method as standalone function
+   * @return {function(Function, number=): Bind} - Extracted once method
    */
   extractOnce () {
     return (fn, priority = 0) => this.once(fn, priority)
   }
 
   /**
-   * Extract `emit` into a separate function
-   * @returns {function(...[*]): void}
+   * Extract `emit` method as standalone function
+   * @returns {function(...any): void} - Extracted emit method
    */
   extractEmit () {
     return (...args) => this.emit(...args)
   }
 
   /**
-   * Will resolve once when signal emits.
-   *
-   * @param timeout
-   * @returns {Promise<unknown>}
+   * Wait for next signal emission as Promise
+   * @param {number} [timeout] - Timeout in milliseconds (uses constructor default if not provided)
+   * @returns {Promise<any>} - Resolves with first emission argument
    */
   wait (timeout = -1) {
     const tio = timeout === -1 ? this.timeout : timeout
@@ -74,17 +74,19 @@ export default class Signal {
   }
 
   /**
-   * Sort Binds by priority. Automatically called when `prioritized: true`
+   * Sort listeners by priority (higher priority executes first)
+   * Automatically called when prioritized: true
+   * @private
    */
   sort () {
     this.binds.sort((a, b) => a.priority - b.priority)
   }
 
   /**
-   * Subscribe on the signal.
-   * @param {function} fn callback for the signal
-   * @param {number} priority priority in the listeners list, triggers `Signal.sort` when `prioritized: true`
-   * @return {Bind}
+   * Subscribe to signal emissions
+   * @param {Function} fn - Callback function to execute on emission
+   * @param {number} [priority=0] - Execution priority (higher executes first)
+   * @return {Bind} - Subscription object with off() method
    */
   on (fn, priority = 0) {
     const bind = new Bind(fn, this, false, priority)
@@ -99,10 +101,10 @@ export default class Signal {
   }
 
   /**
-   * Subscribe on the signal to catch signal once.
-   * @param {function(function=, number=)} fn callback for the signal
-   * @param {number} priority priority in the listeners list, triggers `Signal.sort` when `prioritized: true`
-   * @return {Bind}
+   * Subscribe once, auto-unsubscribe after first emission
+   * @param {Function} fn - Callback function to execute on emission
+   * @param {number} [priority=0] - Execution priority (higher executes first)
+   * @return {Bind} - Subscription object with off() method
    */
   once (fn, priority = 0) {
     const bind = new Bind(fn, this, true, priority)
@@ -117,8 +119,8 @@ export default class Signal {
   }
 
   /**
-   * Unsubscribe from event by Bind
-   * @param {Bind} bind
+   * Unsubscribe a specific listener
+   * @param {Bind} bind - Bind object returned by on() or once()
    */
   off (bind) {
     const index = this.binds.indexOf(bind)
@@ -129,8 +131,8 @@ export default class Signal {
   }
 
   /**
-   * Emit signal with any arguments
-   * @param {...[*]} arguments
+   * Emit signal with any number of arguments
+   * @param {...any} args - Arguments to pass to listeners
    */
   emit () {
     this.stopped = false
@@ -154,7 +156,7 @@ export default class Signal {
   }
 
   /**
-   * Forget previous calls and memory
+   * Clear stored arguments and emission count (keeps listeners)
    */
   forget () {
     this.args.length = 0
@@ -162,21 +164,18 @@ export default class Signal {
   }
 
   /**
-   * Unsubscribe all
-   * @param {boolean} with_flush
+   * Unsubscribe all binds/listeners
+   * @param {boolean} [forget=false] - Also call forget() to clear memory
    */
-  wipe (with_flush = false) {
+  wipe (forget = false) {
     this.binds.length = 0
-    if (with_flush) this.forget()
+    if (forget) this.forget()
   }
 
   /**
-   * Cause signal to stop emitting on the current cycle.
-   * Will turn to false again on next emit() call.
+   * Stop current emission cycle (resets on next emit)
    */
   break () {
     this.stopped = true
   }
 }
-
-
