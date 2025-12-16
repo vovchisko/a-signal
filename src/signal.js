@@ -181,7 +181,7 @@ export default class Signal {
     }
 
     this.emited++
-    return Promise.all(promises)
+    return Promise.allSettled(promises)
   }
 
   /**
