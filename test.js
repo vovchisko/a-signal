@@ -9,6 +9,7 @@ runner([
   { script: './tests/late.js' },
   { script: './tests/late-memory.js' },
   { script: './tests/nested.js' },
+  { script: './tests/async-emit.js' },
   { script: './tests/forget.js' },
   { script: './tests/wipe.js' },
   { script: './tests/break.js' },
