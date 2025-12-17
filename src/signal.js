@@ -156,6 +156,35 @@ export default class Signal {
   }
 
   /**
+   * Emit signal with possibility to await all listeners executions to finish
+   * @param {...any} args - Arguments to pass to listeners
+   * @returns {Promise} - Resolves when all listeners for this signal finished running
+   */
+  async asyncEmit () {
+    this.stopped = false
+
+    let i = this.binds.length
+
+    if (this.memorable) this.args = arguments
+
+    const promises = []
+    while (i--) {
+      const bind = this.binds[i]
+      const result = bind.fn(...arguments)
+      promises.push(result)
+      bind.fired++
+      if (bind.once) this.binds.splice(i, 1)
+      if (this.stopped) {
+        this.stopped = false
+        return
+      }
+    }
+
+    this.emited++
+    return Promise.allSettled(promises)
+  }
+
+  /**
    * Clear stored arguments and emission count (keeps listeners)
    */
   forget () {
