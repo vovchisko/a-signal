@@ -8,6 +8,8 @@ Extract methods to create clean APIs for entities that become ready after async 
 
 ```javascript
 class MagicBox {
+    #emitReady
+
     constructor() {
         this.readySignal = new Signal({ memorable: true })
         

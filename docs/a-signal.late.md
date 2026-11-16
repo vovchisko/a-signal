@@ -46,8 +46,10 @@ App state that components need regardless of load order:
 
 ```javascript
 class AppState {
+    readySignal = new Signal({ late: true })
+    onReady = this.readySignal.extractOn()
+
     constructor() {
-        this.readySignal = new Signal({ late: true })
         this.initialize()
     }
     
@@ -56,8 +58,6 @@ class AppState {
         await connectDatabase()
         this.readySignal.emit()
     }
-    
-    onReady = this.readySignal.extractOn()
 }
 
 const appState = new AppState()

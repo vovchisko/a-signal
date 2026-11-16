@@ -42,9 +42,11 @@ await signal.wait(1000)    // Override to 1 second
 `wait()` resolves with only the first emission argument:
 
 ```javascript
-signal.emit('status', { code: 200 }, 'extra')
+setTimeout(() => signal.emit('status', { code: 200 }, 'extra'))
 const result = await signal.wait()  // Only gets 'status'
 ```
+
+On a `late` (or `memorable`) signal that already emitted, `wait()` resolves immediately.
 
 For all arguments, wrap `once()` in a Promise:
 

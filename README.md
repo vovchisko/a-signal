@@ -53,8 +53,12 @@ const result = await signal.wait()  // Wait for next emission
 🔗 **Clean APIs** - Extract methods for composition
 ```javascript
 class MagicBox {
-    ready = new Signal({ memorable: true }).extractOn()
+    #ready = new Signal({ memorable: true })
+    ready = this.#ready.extractOn()
+    open () { this.#ready.emit(this) }
 }
+const box = new MagicBox()
+box.open()
 await new Promise(resolve => box.ready(resolve))
 ```
 

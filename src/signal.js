@@ -6,14 +6,14 @@ export default class Signal {
    * @param {Object} [options] - Configuration options
    * @param {boolean} [options.memorable=false] - Remember arguments from last emission. Auto-enables late
    * @param {boolean} [options.prioritized=false] - Sort listeners by priority (higher executes first)
-   * @param {boolean} [options.late=false] - Execute listeners on past emissions
+   * @param {boolean} [options.late=memorable] - Execute listeners on past emissions
    * @param {number} [options.timeout=0] - Default timeout for wait() in milliseconds
    */
-  constructor ({ memorable = false, prioritized = false, late = false, timeout = 0 } = {}) {
+  constructor ({ memorable = false, prioritized = false, late = memorable, timeout = 0 } = {}) {
     this.binds = []
-    this.prioritized = prioritized || false
-    this.memorable = memorable || false
-    this.late = late || false
+    this.prioritized = prioritized
+    this.memorable = memorable
+    this.late = late
     this.stopped = false
     this.timeout = timeout
     this.args = []
@@ -56,30 +56,21 @@ export default class Signal {
   /**
    * Wait for next signal emission as Promise
    * @param {number} [timeout] - Timeout in milliseconds (uses constructor default if not provided)
-   * @returns {Promise<any>} - Resolves with first emission argument
+   * @returns {Promise<any>} - Resolves with first emission argument, rejects with Error on timeout
    */
   wait (timeout = -1) {
     const tio = timeout === -1 ? this.timeout : timeout
     return new Promise((resolve, reject) => {
-      const _t = tio ? setTimeout(() => {
-        sub.off()
-        reject()
+      const timer = tio ? setTimeout(() => {
+        bind.off()
+        reject(new Error(`Signal.wait() timed out after ${ tio }ms`))
       }, tio) : null
 
-      const sub = this.once((a) => {
-        if (_t) clearInterval(_t)
+      const bind = this.once(a => {
+        clearTimeout(timer)
         resolve(a)
       })
     })
-  }
-
-  /**
-   * Sort listeners by priority (higher priority executes first)
-   * Automatically called when prioritized: true
-   * @private
-   */
-  sort () {
-    this.binds.sort((a, b) => a.priority - b.priority)
   }
 
   /**
@@ -89,15 +80,7 @@ export default class Signal {
    * @return {Bind} - Subscription object with off() method
    */
   on (fn, priority = 0) {
-    const bind = new Bind(fn, this, false, priority)
-    this.binds.push(bind)
-
-    if (this.late && this.emited) {
-      if (bind.fn(...this.args) === false) this.stopped = true
-    }
-
-    if (this.prioritized) this.sort()
-    return bind
+    return this.add(new Bind(fn, this, false, priority))
   }
 
   /**
@@ -107,15 +90,32 @@ export default class Signal {
    * @return {Bind} - Subscription object with off() method
    */
   once (fn, priority = 0) {
-    const bind = new Bind(fn, this, true, priority)
-    this.binds.push(bind)
+    return this.add(new Bind(fn, this, true, priority))
+  }
 
-    if (this.late && this.emited) {
-      if (bind.fn(...this.args) === false) this.stopped = true
+  /** @private */
+  add (bind) {
+    const replay = this.late && this.emited
+    if (!replay || !bind.once) this.insert(bind)
+    if (replay) {
+      bind.fired++
+      bind.fn(...this.args)
     }
-
-    if (this.prioritized) this.sort()
     return bind
+  }
+
+  /** @private */
+  insert (bind) {
+    if (!this.prioritized) return void this.binds.push(bind)
+    const { binds } = this
+    let lo = 0
+    let hi = binds.length
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1
+      if (binds[mid].priority <= bind.priority) lo = mid + 1
+      else hi = mid
+    }
+    this.binds = binds.toSpliced(lo, 0, bind)
   }
 
   /**
@@ -123,72 +123,80 @@ export default class Signal {
    * @param {Bind} bind - Bind object returned by on() or once()
    */
   off (bind) {
-    const index = this.binds.indexOf(bind)
-
-    if (index !== -1) {
-      this.binds.splice(index, 1)
-    }
+    const i = this.binds.indexOf(bind)
+    if (i !== -1) this.binds = this.binds.toSpliced(i, 1)
   }
 
   /**
    * Emit signal with any number of arguments
    * @param {...any} args - Arguments to pass to listeners
    */
-  emit () {
+  emit (...args) {
+    const outer = this.stopped
     this.stopped = false
-
-    let i = this.binds.length
-
-    if (this.memorable) this.args = arguments
-
-    while (i--) {
-      const bind = this.binds[i]
-      bind.fn(...arguments)
-      bind.fired++
-      if (bind.once) this.binds.splice(i, 1)
-      if (this.stopped) {
-        this.stopped = false
-        return
-      }
-    }
-
+    if (this.memorable) this.args = args
     this.emited++
+    const { binds } = this
+    let pruned = false
+    try {
+      for (let i = binds.length; i-- && !this.stopped;) {
+        const bind = binds[i]
+        if (bind.once) {
+          if (bind.fired) continue
+          pruned = true
+        }
+        bind.fired++
+        bind.fn(...args)
+      }
+    } finally {
+      this.end(outer, pruned)
+    }
   }
 
   /**
    * Emit signal with possibility to await all listeners executions to finish
    * @param {...any} args - Arguments to pass to listeners
-   * @returns {Promise} - Resolves when all listeners for this signal finished running
+   * @returns {Promise<PromiseSettledResult[]>} - Settles when all called listeners finished running
    */
-  async asyncEmit () {
+  async asyncEmit (...args) {
+    const outer = this.stopped
     this.stopped = false
-
-    let i = this.binds.length
-
-    if (this.memorable) this.args = arguments
-
-    const promises = []
-    while (i--) {
-      const bind = this.binds[i]
-      const result = bind.fn(...arguments)
-      promises.push(result)
-      bind.fired++
-      if (bind.once) this.binds.splice(i, 1)
-      if (this.stopped) {
-        this.stopped = false
-        return
-      }
-    }
-
+    if (this.memorable) this.args = args
     this.emited++
-    return Promise.allSettled(promises)
+    const { binds } = this
+    const results = []
+    let pruned = false
+    try {
+      for (let i = binds.length; i-- && !this.stopped;) {
+        const bind = binds[i]
+        if (bind.once) {
+          if (bind.fired) continue
+          pruned = true
+        }
+        bind.fired++
+        try {
+          results.push(bind.fn(...args))
+        } catch (err) {
+          results.push(Promise.reject(err))
+        }
+      }
+    } finally {
+      this.end(outer, pruned)
+    }
+    return Promise.allSettled(results)
+  }
+
+  /** @private */
+  end (outer, pruned) {
+    this.stopped = outer
+    if (pruned) this.binds = this.binds.filter(b => !b.once || !b.fired)
   }
 
   /**
    * Clear stored arguments and emission count (keeps listeners)
    */
   forget () {
-    this.args.length = 0
+    this.args = []
     this.emited = 0
   }
 
@@ -197,7 +205,7 @@ export default class Signal {
    * @param {boolean} [forget=false] - Also call forget() to clear memory
    */
   wipe (forget = false) {
-    this.binds.length = 0
+    this.binds = []
     if (forget) this.forget()
   }
 

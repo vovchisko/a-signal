@@ -60,10 +60,13 @@ new Signal(options?)
 
 **Emission:**
 - `emit(...args)` - Emit signal with arguments
+- `asyncEmit(...args)` → `Promise<PromiseSettledResult[]>` - Emit and wait for all called listeners to settle (sync throws included)
 - `break()` - Stop current emission cycle
 
+Listeners run against the set of binds taken when the emission starts: binds added during it wait for the next emission, binds removed during it still run in this one (except a `once` that already fired).
+
 **Async:**
-- `wait(timeout?)` → `Promise` - Wait for next emission
+- `wait(timeout?)` → `Promise` - Wait for next emission, rejects with `Error` on timeout
 
 **Extraction:**
 - `extractOn()` → `Function` - Extract `on` method
@@ -76,6 +79,7 @@ new Signal(options?)
 
 **Properties:**
 - `args: Array` - Stored arguments from last emission (if memorable)
+- `emited: number` - Emissions since creation or last `forget()`
 
 ### Bind Object
 
@@ -106,12 +110,10 @@ userSignal.on(user => {
 ### Entity Composition
 ```javascript
 class MagicBox {
-    constructor() {
-        this.readySignal = new Signal({ memorable: true })
-    }
-    
+    #readySignal = new Signal({ memorable: true })
+
     // Clean public API
-    ready = this.readySignal.extractOn()
+    ready = this.#readySignal.extractOn()
 }
 
 const box = new MagicBox()

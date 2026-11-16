@@ -5,7 +5,7 @@
   "description": "Simple signal emitter.",
   "main": "index.js",
   "scripts": {
-    "test": "node test.js",
+    "test": "node --test",
     "preversion": "npm test"
   },
   "keywords": [
@@ -24,7 +24,7 @@
   "bugs": {
     "url": "https://github.com/vovchisko/a-signal/issues"
   },
-  "devDependencies": {
-    "test-a-bit": "^1.1.3"
+  "engines": {
+    "node": ">=20"
   }
 }

@@ -19,7 +19,7 @@ signal.emit()
 // logs: Third (priority 0)
 ```
 
-Higher numbers execute first. Default priority is 0.
+Higher numbers execute first. Default priority is 0. Equal priorities run last added first.
 
 ## Emission Control
 
@@ -38,7 +38,7 @@ signal.on(() => console.log('Never runs'), 0)
 signal.emit()  // logs: Always first - stopping here
 ```
 
-`break()` resets on next `emit()` call.
+`break()` resets on next `emit()` call. A stopped emission still counts for [late](./a-signal.late.md) and [memorable](./a-signal.memorable.md).
 
 ## Related
 
